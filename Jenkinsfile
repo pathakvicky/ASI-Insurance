@@ -31,14 +31,14 @@ pipeline {
             }
         }
 
-        stage('Deploy with Ansible') {
-            steps {
-                ansiblePlaybook(
-                    credentialsId: 'your-ansible-credentials-id',
-                    playbook: 'path/to/your/ansible/playbook.yml',
-                    inventory: 'path/to/your/ansible/inventory.ini'
-                )
-            }
-        }
+        // stage('Deploy with Ansible') {
+        //     steps {
+        //         ansiblePlaybook(
+        //             credentialsId: 'your-ansible-credentials-id',
+        //             playbook: 'path/to/your/ansible/playbook.yml',
+        //             inventory: 'path/to/your/ansible/inventory.ini'
+        //         )
+        //     }
+        // }
     }
 }
