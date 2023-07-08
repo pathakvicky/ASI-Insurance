@@ -13,11 +13,16 @@ pipeline {
             }
         }
         stage('mvn Build'){
-        sh "mvn clean package"        
-    }
+            steps{
+                sh "mvn clean package"        
+            }
+        }
     
         stage('Publish Test Reports'){
+            steps{
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'target/surefire-reports', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+       
+            }
         }
        
 
