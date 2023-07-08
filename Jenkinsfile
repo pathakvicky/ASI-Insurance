@@ -12,12 +12,14 @@ pipeline {
                 git 'https://github.com/pathakvicky/ASI-Insurance.git'
             }
         }
-
-        stage('Build') {
-            steps {
-                sh 'mvn clean package'
-            }
+        stage('Maven Build'){
+        sh "${mavenCMD} clean package"        
+    }
+    
+        stage('Publish Test Reports'){
+            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'target/surefire-reports', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
         }
+       
 
              stage('Build Docker Image') {
             steps {
