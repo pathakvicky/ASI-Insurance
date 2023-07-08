@@ -12,7 +12,7 @@ pipeline {
                 git 'https://github.com/pathakvicky/ASI-Insurance.git'
             }
         }
-        stage('Maven Build'){
+        stage('mvn Build'){
         sh "${mavenCMD} clean package"        
     }
     
