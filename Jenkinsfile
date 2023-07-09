@@ -1,51 +1,53 @@
-pipeline {
+ pipeline{
     agent any
 
-    // environment {
-    //     DOCKER_HUB_USERNAME = credentials('vicky12345pathak@gmail.com')
-    //     DOCKER_HUB_PASSWORD = credentials('Vicky$_123#')
-    // }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/pathakvicky/ASI-Insurance.git'
-            }
+    stages{
+    stage('Code Checkout'){
+        try{
+            checkout scm
         }
-        stage('mvn Build'){
-            steps{
-                sh "mvn clean package"        
-            }
+        catch(Exception e){
+            echo 'Exception occured in Git Code Checkout Stage'
+            currentBuild.result = "FAILURE"
+            //emailext body: '''Dear All,
+            //The Jenkins job ${JOB_NAME} has been failed. Request you to please have a look at it immediately by clicking on the below link. 
+            //${BUILD_URL}''', subject: 'Job ${JOB_NAME} ${BUILD_NUMBER} is failed', to: 'jenkins@gmail.com'
         }
-    
-        // stage('Publish Test Reports'){
-        //     steps{
-        //     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'target/surefire-reports', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
-       
-        //     }
-        // }
-       
-
-        //      stage('Build Docker Image') {
-        //     steps {
-        //         script {
-        //             def dockerImage = docker.build("pathakvicky/asi_insurance:${env.BUILD_ID}")
-        //             sh 'docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD'
-        //             //docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-        //             dockerImage.push()
-        //             //}
-        //         }
-        //     }
-        // }
-
-        // stage('Deploy with Ansible') {
-        //     steps {
-        //         ansiblePlaybook(
-        //             credentialsId: 'your-ansible-credentials-id',
-        //             playbook: 'path/to/your/ansible/playbook.yml',
-        //             inventory: 'path/to/your/ansible/inventory.ini'
-        //         )
-        //     }
-        // }
     }
+    
+    stage('Maven Build'){
+        sh "mvn clean package"        
+    }
+    
+    stage('Publish Test Reports'){
+        publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'target/surefire-reports', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+    }
+    
+    stage('Docker Image Build'){
+        echo 'Creating Docker image'
+        sh "docker build -t $dockerHubUser/$containerName:$tag --pull --no-cache ."
+    }
+	
+    stage('Docker Image Scan'){
+        echo 'Scanning Docker image for vulnerbilities'
+        sh "docker build -t ${dockerHubUser}/insure-me:${tag} ."
+    }   
+	
+    stage('Publishing Image to DockerHub'){
+        echo 'Pushing the docker image to DockerHub'
+        withCredentials([usernamePassword(credentialsId: 'dockerHubAccount', usernameVariable: 'dockerUser', passwordVariable: 'dockerPassword')]) {
+			sh "docker login -u $dockerUser -p $dockerPassword"
+			sh "docker push $dockerUser/$containerName:$tag"
+			echo "Image push complete"
+        } 
+    }    
+	
+	stage('Docker Container Deployment'){
+		sh "docker rm $containerName -f"
+		sh "docker pull $dockerHubUser/$containerName:$tag"
+		sh "docker run -d --rm -p $httpPort:$httpPort --name $containerName $dockerHubUser/$containerName:$tag"
+		echo "Application started on port: ${httpPort} (http)"
+	}
+
+}
 }
