@@ -18,12 +18,12 @@ pipeline {
             }
         }
     
-        stage('Publish Test Reports'){
-            steps{
-            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'target/surefire-reports', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+        // stage('Publish Test Reports'){
+        //     steps{
+        //     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'target/surefire-reports', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
        
-            }
-        }
+        //     }
+        // }
        
 
         //      stage('Build Docker Image') {
