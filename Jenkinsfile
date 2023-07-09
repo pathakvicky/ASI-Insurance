@@ -1,10 +1,10 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_HUB_USERNAME = credentials('vicky12345pathak@gmail.com')
-        DOCKER_HUB_PASSWORD = credentials('Vicky$_123#')
-    }
+    // environment {
+    //     DOCKER_HUB_USERNAME = credentials('vicky12345pathak@gmail.com')
+    //     DOCKER_HUB_PASSWORD = credentials('Vicky$_123#')
+    // }
 
     stages {
         stage('Checkout') {
@@ -26,17 +26,17 @@ pipeline {
         }
        
 
-             stage('Build Docker Image') {
-            steps {
-                script {
-                    def dockerImage = docker.build("pathakvicky/asi_insurance:${env.BUILD_ID}")
-                    sh 'docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD'
-                    //docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                    dockerImage.push()
-                    //}
-                }
-            }
-        }
+        //      stage('Build Docker Image') {
+        //     steps {
+        //         script {
+        //             def dockerImage = docker.build("pathakvicky/asi_insurance:${env.BUILD_ID}")
+        //             sh 'docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD'
+        //             //docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+        //             dockerImage.push()
+        //             //}
+        //         }
+        //     }
+        // }
 
         // stage('Deploy with Ansible') {
         //     steps {
