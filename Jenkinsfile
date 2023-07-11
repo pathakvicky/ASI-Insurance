@@ -1,49 +1,87 @@
 pipeline {
-    agent any
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'master', url: 'https://github.com/pathakvicky/ASI-Insurance.git'
-            }
-        }
-        
-        stage('Build') {
-            steps {
-                sh 'docker build -t your-image-name .'
-            }
-        }
-        
-        
-        stage('Publish') {
-            steps {
-                // Log in to Docker Hub or GitHub Packages
-                // You need to provide your credentials or use credentials stored in Jenkins credentials
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'Vicky$_123#', usernameVariable: 'vickypathak')]) {
-                    sh 'docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD'
-                }
-                
-                // Push the Docker image to Docker Hub or GitHub Packages
-                sh 'docker push java-project'
-            }
-        }
-        
-        stage('Deploy') {
-            steps {
-                // Deploy your Java application using the Docker image
-                // This step can vary depending on your deployment strategy
-                // For example, using Docker Compose or Kubernetes manifests
-            }
-        }
+  agent any
+
+  // Fetch code from GitHub
+  environment {
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+  }
+
+  stages {
+    stage('checkout') {
+      steps {
+        git branch: 'master', url: 'https://github.com/GithubResources1/InsuranceManagement.git'
+
+      }
     }
-    
-    post {
+
+   // Build Java application
+
+    stage('Maven Build') {
+      steps {
+        sh 'mvn clean install'
+      }
+
+     // Post building archive Java application
+
+      post {
         success {
-            // Actions to perform if the pipeline succeeds
+          archiveArtifacts artifacts: '**/target/*.jar'
         }
-        
-        failure {
-            // Actions to perform if the pipeline fails
-        }
+      }
     }
+
+  // Test Java application
+
+    stage('Maven Test') {
+      steps {
+        sh 'mvn test'
+      }
+    }
+
+   // Build docker image in Jenkins
+
+    stage('Build Docker Image') {
+
+      steps {
+        sh 'docker build -t asi_insurance:latest .'
+        sh 'docker tag asi_insurance pathakvicky/asi_insurance'
+      }
+    }
+
+   // Login to DockerHub before pushing docker Image
+
+    stage('Login to DockerHub') {
+      steps {
+        sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+      }
+    }
+
+   // Push image to DockerHub registry
+
+    stage('Push Image to dockerHUb') {
+      steps {
+        sh 'docker push pathakvicky/asi_insurance:latest'
+      }
+      post {
+        always {
+          sh 'docker logout'
+        }
+      }
+
+    }
+
+   // Pull docker image from DockerHub and run in EC2 instance 
+
+    // stage('Deploy Docker image to AWS instance') {
+    //   steps {
+    //     script {
+    //       sshagent(credentials: ['awscred']) {
+    //       sh "ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_SERVER} 'docker stop javaApp || true && docker rm javaApp || true'"
+    //   sh "ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_SERVER} 'docker pull palakbhawsar/javawebapp'"
+    //       sh "ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_SERVER} 'docker run --name javaApp -d -p 8081:8081 palakbhawsar/javawebapp'"
+    //       }
+    //     }
+    //   }
+    // }
+  }
 }
