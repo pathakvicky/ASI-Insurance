@@ -1,7 +1,7 @@
 - name : Configure Docker on EC2 Instances
   hosts : all
   connection : ssh
-  tasks : ]
+  tasks : 
   - name: Stop a container
   docker_container:
     name: pathakvicky/asi_insurance:latest
