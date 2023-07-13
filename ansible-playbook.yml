@@ -3,4 +3,4 @@
   connection : ssh
   tasks : 
   - name: Deploy Docker Container
-    command: docker run -itd -p 8084:8081 pathakvicky/asi_insurance:latest
+    command: docker run -itd -p 8084:8081 asi_insurance:latest

@@ -9,7 +9,7 @@ pipeline {
   stages {
     stage('checkout') {
       steps {
-        git branch: 'master', url: 'https://github.com/GithubResources1/InsuranceManagement.git'
+        git branch: 'master', url: 'https://github.com/pathakvicky/ASI-Insurance.git'
 
       }
     }
@@ -48,7 +48,7 @@ pipeline {
       }
     }
 
-   // Login to DockerHub before pushing docker Image
+  // Login to DockerHub before pushing docker Image
 
     stage('Login to DockerHub') {
       steps {
@@ -56,7 +56,7 @@ pipeline {
       }
     }
 
-   // Push image to DockerHub registry
+  // Push image to DockerHub registry
 
     stage('Push Image to dockerHUb') {
       steps {
@@ -69,19 +69,11 @@ pipeline {
       }
 
     }
-
-   // Pull docker image from DockerHub and run in EC2 instance 
-
-    // stage('Deploy Docker image to AWS instance') {
-    //   steps {
-    //     script {
-    //       sshagent(credentials: ['awscred']) {
-    //       sh "ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_SERVER} 'docker stop javaApp || true && docker rm javaApp || true'"
-    //   sh "ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_SERVER} 'docker pull palakbhawsar/javawebapp'"
-    //       sh "ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_SERVER} 'docker run --name javaApp -d -p 8081:8081 palakbhawsar/javawebapp'"
-    //       }
-    //     }
-    //   }
-    // }
+    stage('Deploy Ansible') {
+        steps{
+         git branch: 'master', url: 'https://github.com/pathakvicky/ASI-Insurance.git'
+         sh 'ansible-playbook -i inventory ansible-playbook.yml'
+        }
+    }
   }
 }
