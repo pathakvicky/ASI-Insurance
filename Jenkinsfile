@@ -1,51 +1,79 @@
 pipeline {
-    agent any
+  agent any
 
-    // environment {
-    //     DOCKER_HUB_USERNAME = credentials('vicky12345pathak@gmail.com')
-    //     DOCKER_HUB_PASSWORD = credentials('Vicky$_123#')
-    // }
+  environment {
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+  }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/pathakvicky/ASI-Insurance.git'
-            }
-        }
-        stage('mvn Build'){
-            steps{
-                sh "mvn clean package"        
-            }
-        }
-    
-        stage('Publish Test Reports'){
-            steps{
-            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'target/surefire-reports', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
-       
-            }
-        }
-       
+  stages {
+     // Fetch code from GitHub
+    stage('checkout') {
+      steps {
+        git branch: 'master', url: 'https://github.com/pathakvicky/ASI-Insurance.git'
 
-        //      stage('Build Docker Image') {
-        //     steps {
-        //         script {
-        //             def dockerImage = docker.build("pathakvicky/asi_insurance:${env.BUILD_ID}")
-        //             sh 'docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD'
-        //             //docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-        //             dockerImage.push()
-        //             //}
-        //         }
-        //     }
-        // }
-
-        // stage('Deploy with Ansible') {
-        //     steps {
-        //         ansiblePlaybook(
-        //             credentialsId: 'your-ansible-credentials-id',
-        //             playbook: 'path/to/your/ansible/playbook.yml',
-        //             inventory: 'path/to/your/ansible/inventory.ini'
-        //         )
-        //     }
-        // }
+      }
     }
+
+   // Build Java application
+
+    stage('Maven Build') {
+      steps {
+        sh 'mvn clean install'
+      }
+
+     // Post building archive Java application
+
+      post {
+        success {
+          archiveArtifacts artifacts: '**/target/*.jar'
+        }
+      }
+    }
+
+  // Test Java application
+
+    stage('Maven Test') {
+      steps {
+        sh 'mvn test'
+      }
+    }
+
+   // Build docker image in Jenkins
+
+    stage('Build Docker Image') {
+
+      steps {
+        sh 'docker build -t asi_insurance:latest .'
+        sh 'docker tag asi_insurance pathakvicky/asi_insurance'
+      }
+    }
+
+  // Login to DockerHub before pushing docker Image
+
+    stage('Login to DockerHub') {
+      steps {
+        sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+      }
+    }
+
+  // Push image to DockerHub registry
+
+    stage('Push Image to dockerHUb') {
+      steps {
+        sh 'docker push pathakvicky/asi_insurance:latest'
+      }
+      post {
+        always {
+          sh 'docker logout'
+        }
+      }
+
+    }
+  
+    stage('Deploy Ansible') {
+        steps{
+         sh 'ansible-playbook -i inventory ansible-playbook.yml'
+        }
+    }
+  }
 }
